@@ -1,70 +1,97 @@
-import { SymbolView } from 'expo-symbols';
-import { Link, Tabs } from 'expo-router';
-import { Platform, Pressable } from 'react-native';
-
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+import React from 'react';
+import { Tabs } from 'expo-router';
+import { StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, 8) + 10;
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
+        headerShown: false,
+        tabBarActiveTintColor: '#C5A059',
+        tabBarInactiveTintColor: '#8E8E93',
+        tabBarStyle: [
+          styles.tabBar,
+          { height: 54 + bottomInset, paddingBottom: bottomInset },
+        ],
+        tabBarLabelStyle: styles.tabBarLabel,
+        sceneStyle: { backgroundColor: '#F8F8FA' },
       }}>
       <Tabs.Screen
-        name="index"
+        name="accueil"
         options={{
-          title: 'Tab One',
+          title: 'Accueil',
           tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }}
-              tintColor={color}
-              size={28}
-            />
-          ),
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable style={{ marginRight: 15 }}>
-                {({ pressed }) => (
-                  <SymbolView
-                    name={{ ios: 'info.circle', android: 'info', web: 'info' }}
-                    size={25}
-                    tintColor={Colors[colorScheme].text}
-                    style={{ opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
+            <MaterialIcons name="home" size={24} color={color as any} />
           ),
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="services"
         options={{
-          title: 'Tab Two',
+          title: 'Services',
           tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }}
-              tintColor={color}
-              size={28}
-            />
+            <MaterialIcons name="spa" size={24} color={color as any} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="fadu"
+        options={{
+          title: 'Fadu',
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="auto-awesome" size={24} color={color as any} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="rendez-vous"
+        options={{
+          title: 'RDV',
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="event" size={24} color={color as any} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profil"
+        options={{
+          title: 'Profil',
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="person" size={24} color={color as any} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="echanges"
+        options={{
+          href: null,
+          title: 'Échanges',
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#EBEBEB',
+    paddingTop: 6,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+  },
+  tabBarLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+});

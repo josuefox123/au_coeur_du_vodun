@@ -1,10 +1,14 @@
 import { useFonts } from 'expo-font';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { VodunPalette } from '@/constants/Colors';
+import { AppProvider } from '@/context/AppContext';
+import { VodunAlertProvider } from '@/components/VodunAlert';
+import '@/lib/vodunNotifications';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -12,11 +16,9 @@ export {
 } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  anchor: '(tabs)',
+  anchor: 'index',
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -24,7 +26,6 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
@@ -39,18 +40,57 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
-}
-
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
+    <AppProvider>
+      <VodunAlertProvider>
+      <StatusBar style="auto" />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: {
+            backgroundColor: '#FAF7F2',
+          },
+        }}>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        <Stack.Screen
+          name="fadu"
+          options={{
+            presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
+          name="consultation"
+          options={{
+            presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
+          name="assistant"
+          options={{
+            presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
+          name="temple"
+        />
+        <Stack.Screen
+          name="enseignements"
+        />
+        <Stack.Screen
+          name="auth"
+          options={{
+            presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
+          name="modal"
+          options={{
+            presentation: 'modal',
+          }}
+        />
       </Stack>
-    </ThemeProvider>
+      </VodunAlertProvider>
+    </AppProvider>
   );
 }
