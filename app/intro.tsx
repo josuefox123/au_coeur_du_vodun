@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { BokononSprite, BokononPose } from '@/components/BokononSprite';
+import { BokononRigged3D } from '@/components/BokononRigged3D';
 
 const { width, height } = Dimensions.get('window');
 
@@ -34,13 +34,10 @@ export default function IntroVodunScreen() {
   const router = useRouter();
 
   // Étape affichée
-  const [stepText, setStepText] = useState('Le Bokonon interroge les Esprits...');
-  const [currentPose, setCurrentPose] = useState<BokononPose>('idle');
+  const [stepText, setStepText] = useState('Le Bokonon interroge le Fâ sacré...');
+  const [act3D, setAct3D] = useState<'throw' | 'point' | 'open'>('throw');
 
-  // Animations du Bokonon (scène 1)
-  const auraScale = useRef(new Animated.Value(1)).current;
-  const handSparkleAnim = useRef(new Animated.Value(0)).current;
-  const speechAnim = useRef(new Animated.Value(0)).current;
+  // Animation de transition de la scène 3D
   const scenePriestFade = useRef(new Animated.Value(1)).current;
 
   // Animations des Portes Noir & Blanc 3D (scène 2)
@@ -50,56 +47,19 @@ export default function IntroVodunScreen() {
   const sanctuaryGlow = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // 1. Aura dorée pulsante en boucle (scale 1 -> 1.08)
-    const auraLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(auraScale, {
-          toValue: 1.08,
-          duration: 1400,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(auraScale, {
-          toValue: 1,
-          duration: 1400,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    auraLoop.start();
+    // Séquence synchronisée en 3 actes cinématographiques :
+    // 0 -> 2.4s : Acte 1 (Lancer de cauris 3D et animation du prêtre)
+    setAct3D('throw');
 
-    // Séquence synchronisée en 3 actes :
-    // 0 -> 1s : Pose idle (respiration)
-    // T + 1.0s : Pose throw (le Bokonon jette son Fâ)
-    const t1 = setTimeout(() => {
-      setStepText('Le Bokonon lance le Fâ sacré...');
-      setCurrentPose('throw');
-    }, 1000);
-
-    // T + 2.4s : Pose point (main tendue, étincelle et cri d'incantation)
+    // T + 2.4s : Acte 2 (Main tendue, incantation sacrée et particules)
     const t2 = setTimeout(() => {
       setStepText('« Porte, ouvre-toi ! »');
-      setCurrentPose('point');
-
-      Animated.parallel([
-        Animated.spring(handSparkleAnim, {
-          toValue: 1,
-          friction: 4,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-        Animated.spring(speechAnim, {
-          toValue: 1,
-          friction: 4,
-          tension: 50,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      setAct3D('point');
     }, 2400);
 
-    // T + 4.2s : Fade out du personnage et apparition de la porte 3D
+    // T + 4.2s : Acte 3 (Ouverture majestueuse des portes 3D du temple)
     const t3 = setTimeout(() => {
+      setAct3D('open');
       Animated.timing(scenePriestFade, {
         toValue: 0,
         duration: 500,
@@ -140,12 +100,10 @@ export default function IntroVodunScreen() {
     }, 4200);
 
     return () => {
-      auraLoop.stop();
-      clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
     };
-  }, [auraScale, handSparkleAnim, speechAnim, scenePriestFade, doorsEnterAnim, doorRotateLeft, doorRotateRight, sanctuaryGlow, router]);
+  }, [scenePriestFade, doorsEnterAnim, doorRotateLeft, doorRotateRight, sanctuaryGlow, router]);
 
   const handleSkip = () => {
     router.replace('/(tabs)/accueil');
@@ -156,66 +114,15 @@ export default function IntroVodunScreen() {
       <StatusBar hidden />
 
       {/* ======================================================== */}
-      {/* 1. SCÈNE DU BOKONON : SPRITE 2D JEU VIDÉO DÉTOURÉ SANS CADRE */}
+      {/* 1. SCÈNE DU TEMPLE 3D AVEC PRÊTRE RIGGÉ PHOTORÉALISTE     */}
       {/* ======================================================== */}
       <Animated.View style={[styles.priestSceneContainer, { opacity: scenePriestFade }]}>
-        {/* Aura dorée pulsante derrière le personnage */}
-        <Animated.View
-          style={[
-            styles.priestAura,
-            {
-              transform: [{ scale: auraScale }],
-            },
-          ]}
-        />
+        {/* Moteur 3D Temps Réel (Three.js & Expo-GL) avec animations */}
+        <BokononRigged3D act={act3D} />
 
-        {/* Bulle d'incantation parlée */}
-        <Animated.View
-          style={[
-            styles.speechBox,
-            {
-              transform: [
-                { scale: speechAnim },
-                {
-                  translateY: speechAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [20, 0],
-                  }),
-                },
-              ],
-              opacity: speechAnim,
-            },
-          ]}>
-          <Text style={styles.speechText}>« PORTE, OUVRE-TOI ! »</Text>
-          <View style={styles.speechPointer} />
-        </Animated.View>
-
-        {/* Personnage Sprite 2D de jeu vidéo (fond transparent, sans cadre) */}
-        <View style={styles.spriteHolder}>
-          <BokononSprite pose={currentPose} size={width * 0.85} />
-
-          {/* Étincelle magique dorée au bout de la main tendue */}
-          <Animated.View
-            style={[
-              styles.sparkleHandSpot,
-              {
-                opacity: handSparkleAnim,
-                transform: [
-                  {
-                    scale: handSparkleAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.3, 1.25],
-                    }),
-                  },
-                ],
-              },
-            ]}>
-            <MaterialIcons name="auto-awesome" size={40} color={THEME.gold} />
-          </Animated.View>
-        </View>
-
-        {/* Sous-titre explicatif en bas */}
+        {/* Unique capsule de dialogue / statut en bas */}
         <View style={styles.subtitleCapsule}>
+          <MaterialIcons name="auto-awesome" size={14} color={THEME.gold} style={{ marginRight: 6 }} />
           <Text style={styles.subtitleText}>{stepText}</Text>
         </View>
       </Animated.View>
@@ -435,78 +342,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 50,
-  },
-  priestAura: {
-    position: 'absolute',
-    width: 290,
-    height: 290,
-    borderRadius: 145,
-    backgroundColor: THEME.goldHalo,
-    top: height * 0.20,
+    backgroundColor: THEME.black,
   },
 
-  // Bulle de commande
-  speechBox: {
+  // Unique capsule de discussion / statut en bas de l'écran
+  subtitleCapsule: {
     position: 'absolute',
-    top: height * 0.14,
-    backgroundColor: THEME.white,
-    paddingHorizontal: 20,
+    bottom: height * 0.08,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 22,
     paddingVertical: 10,
     borderRadius: 22,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: THEME.gold,
-    shadowColor: THEME.gold,
-    shadowOpacity: 0.8,
-    shadowRadius: 18,
-    elevation: 12,
-    zIndex: 60,
-  },
-  speechText: {
-    color: '#0A0A0A',
-    fontWeight: '900',
-    fontSize: 16,
-    letterSpacing: 2,
-  },
-  speechPointer: {
-    position: 'absolute',
-    bottom: -9,
-    width: 0,
-    height: 0,
-    borderLeftWidth: 9,
-    borderRightWidth: 9,
-    borderTopWidth: 9,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderTopColor: THEME.white,
-  },
-
-  // Support du Sprite (sans aucun cadre ni fond rectangulaire)
-  spriteHolder: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    marginTop: 10,
-  },
-  sparkleHandSpot: {
-    position: 'absolute',
-    top: '36%',
-    right: '18%',
-    shadowColor: THEME.gold,
-    shadowOpacity: 0.9,
-    shadowRadius: 16,
-    elevation: 10,
-    zIndex: 35,
-  },
-
-  subtitleCapsule: {
-    marginTop: 26,
-    paddingHorizontal: 22,
-    paddingVertical: 9,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(10,10,10,0.85)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
+    borderColor: 'rgba(197, 160, 89, 0.4)',
+    zIndex: 60,
   },
   subtitleText: {
     color: THEME.white,
